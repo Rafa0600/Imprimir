@@ -36,17 +36,18 @@
     .dest button.on small { color: var(--primary); }
 
     /* Barra de formato */
-    .tools { position: sticky; top: 0; z-index: 20; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 8px 0; background: var(--bg); }
+    .tools { position: sticky; top: 0; z-index: 20; display: flex; flex-wrap: wrap; align-items: center; gap: 4px; padding: 8px 0; background: var(--bg); }
     .tb { min-width: 38px; height: 40px; padding: 0 8px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text); font-size: 0.95em; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 4px; }
     .tb:active { transform: scale(0.95); background: var(--bg-input); }
     .tb.on { background: var(--primary); border-color: var(--primary); color: #fff; }
     .grp { display: inline-flex; gap: 4px; }
     .sep { width: 1px; height: 28px; background: var(--border); margin: 0 2px; }
     .tam { display: inline-flex; align-items: center; gap: 4px; margin-left: auto; }
-    .tools .tb { min-width: 34px; padding: 0 6px; }
+    .tools .tb { min-width: 32px; padding: 0 4px; }
+    .tb.inv { background: #000; color: #fff; border-color: #fff; }
     .tam .val { min-width: 30px; text-align: center; font-size: 0.66em; font-weight: 800; color: var(--text-2); line-height: 1.1; }
     .tam .val b { display: block; font-size: 1.4em; color: var(--text); }
-    .autoBtn { height: 40px; min-width: 54px; padding: 0 6px; border-radius: 10px; border: 2px solid var(--success); background: transparent; color: var(--success); font-weight: 900; font-size: 0.8em; line-height: 1.05; cursor: pointer; }
+    .autoBtn { height: 40px; min-width: 50px; padding: 0 5px; border-radius: 10px; border: 2px solid var(--success); background: transparent; color: var(--success); font-weight: 900; font-size: 0.8em; line-height: 1.05; cursor: pointer; }
     .autoBtn small { display: block; font-size: 0.75em; font-weight: 700; color: var(--text-2); }
     .autoBtn.on { background: var(--success); color: #05301f; }
     /* Opciones de la etiqueta grande */
@@ -113,6 +114,9 @@
     .ed { width: 100%; font-family: Arial, Helvetica, sans-serif; font-weight: 400; line-height: 1.15; color: #000; outline: none; white-space: pre-wrap; text-align: center; }
     .paper.ticket .ed { overflow-wrap: anywhere; }
     .ed b, .ed strong { font-weight: 700; }
+    .ed .inv { background: #000; color: #fff; }                 /* letras blancas sobre negro */
+    .ed div.inv { padding: 0.06em 0.15em; }
+    .ed span.inv { padding: 0 0.12em; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
     .ed div, .ed p { margin: 0; }
     /* Etiqueta grande 10x19 con troquel: --s = ancho del pedazo precortado */
     .mainBox { display: contents; }
@@ -159,6 +163,7 @@
             <button class="tb" onpointerdown="event.preventDefault()" onclick="fmtTam(1)" title="Más grande" style="font-size:1.1em">A+</button>
         </div>
         <button class="tb" id="alignBtn" onpointerdown="event.preventDefault()" onclick="fmtAlignCiclo()" title="Alinear la línea (centro → izquierda → derecha)">↔</button>
+        <button class="tb inv" onpointerdown="event.preventDefault()" onclick="fmtInv()" title="Letras blancas sobre fondo negro (la línea o la parte marcada)">A</button>
         <div class="tam">
             <button class="tb" onpointerdown="event.preventDefault()" onclick="cambiarBase(-1)">−</button>
             <div class="val" id="baseVal"><b>16</b>tam.</div>
@@ -351,7 +356,7 @@
             } else st.innerHTML = '';
             $('baseVal').innerHTML = '<b>' + Math.round(b) + '</b>tam.';
             $('autoBtn').classList.toggle('on', esLabel() && cfg.auto);
-            $('autoBtn').innerHTML = cfg.auto ? 'AUTO<small>✓ prendido</small>' : 'AUTO<small>apagado</small>';
+            $('autoBtn').innerHTML = cfg.auto ? 'AUTO<small>✓ sí</small>' : 'AUTO<small>no</small>';
             $('aviso').textContent = esLabel() && !cfg.auto && !entra(b) ? '⚠️ No entra en la etiqueta: achicá o tocá AUTO' : '';
         });
     }
@@ -421,6 +426,33 @@
             while (tmp.firstChild) sp.appendChild(tmp.firstChild);
             ponerNivel(sp, lv);
             if (lv === 3 && nivelEn(ini) !== 3) { sp.dataset.lv = 3; sp.style.fontSize = 'var(--b)'; }
+            r.insertNode(sp);
+            const r2 = document.createRange(); r2.selectNodeContents(sp);
+            s.removeAllRanges(); s.addRange(r2);
+        }
+        refrescar(); guardarBorrador();
+    }
+    // Blanco sobre negro: sin selección (o varias líneas) → la línea entera; con una parte → solo esa parte. Tocar de nuevo lo saca.
+    function fmtInv() {
+        asegurarDivs();
+        const s0 = getSelection();
+        const habiaParte = s0.rangeCount && ed.contains(s0.anchorNode) && !s0.isCollapsed;
+        const s = tomarSeleccion(); if (!s) return;
+        const r = s.getRangeAt(0);
+        const bloques = bloquesDe(r);
+        const parcial = habiaParte && bloques.length === 1 && r.toString().trim() !== bloques[0].innerText.trim();
+        const ini = r.startContainer.nodeType === 3 ? r.startContainer.parentNode : r.startContainer;
+        const spanInv = ini.closest && ini.closest('span.inv');
+        if (!parcial) {
+            const todas = bloques.length && bloques.every(b => b.classList.contains('inv'));
+            bloques.forEach(b => { b.querySelectorAll('span.inv').forEach(x => x.replaceWith(...x.childNodes)); b.classList.toggle('inv', !todas); });
+        } else if (spanInv && ed.contains(spanInv)) {
+            spanInv.replaceWith(...spanInv.childNodes);
+        } else {
+            const frag = r.extractContents();
+            const sp = document.createElement('span'); sp.className = 'inv';
+            sp.appendChild(frag);
+            sp.querySelectorAll('span.inv').forEach(x => x.replaceWith(...x.childNodes));
             r.insertNode(sp);
             const r2 = document.createRange(); r2.selectNodeContents(sp);
             s.removeAllRanges(); s.addRange(r2);
