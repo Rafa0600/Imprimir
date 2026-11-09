@@ -99,6 +99,8 @@
     .sheet h2 button { background: none; border: none; color: var(--text-2); font-size: 1.3em; cursor: pointer; }
     .ult { display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid var(--border); border-radius: 12px; margin-bottom: 6px; background: var(--bg-input); cursor: pointer; }
     .ult .ico { font-size: 1.4em; }
+    .ult .mini { flex: none; width: 116px; height: 96px; border-radius: 8px; background: #fff; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+    .ult .mini > div { flex: none; }
     .ult .tx { flex: 1; min-width: 0; }
     .ult .tx b { display: block; font-size: 0.9em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .ult .tx small { color: var(--text-2); font-size: 0.75em; }
@@ -107,6 +109,15 @@
     .sheet .acciones { display: flex; gap: 8px; margin-top: 12px; }
     .sheet .acciones button { flex: 1; height: 46px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text); font-weight: 800; cursor: pointer; }
     .sheet .acciones .pri { background: var(--primary); border-color: var(--primary); color: #fff; }
+    /* Confirmar propio (en vez del cartel feo del navegador) */
+    .sheet.conf { text-align: center; padding: 18px 16px calc(18px + env(safe-area-inset-bottom)); }
+    .conf .ic { font-size: 3em; line-height: 1.1; }
+    .conf .tx { font-size: 1.1em; font-weight: 800; margin: 8px 0 4px; }
+    .conf .sub { font-size: 0.85em; color: var(--text-2); min-height: 0; }
+    .conf .bts { display: flex; gap: 10px; margin-top: 16px; }
+    .conf .bts button { flex: 1; height: 58px; border-radius: 14px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text); font-size: 1.15em; font-weight: 900; cursor: pointer; }
+    .conf .bts .si { background: var(--danger); border-color: var(--danger); color: #fff; }
+    .conf .bts .si.ok { background: var(--success); border-color: var(--success); color: #05301f; }
 
     .topfix .gopts { margin: 0; }
     .topfix .tools { position: static; display: flex; flex-wrap: nowrap; align-items: stretch; gap: 3px; padding: 0; background: none; }
@@ -250,6 +261,15 @@
         <h2><span id="offTitulo">⚠️ La impresora no responde</span><button onclick="cerrarOff()">✕</button></h2>
         <div class="hint" id="offTxt" style="font-size:0.88em"></div>
         <div class="acciones" id="offAcc"></div>
+    </div>
+</div>
+
+<div class="sheet-bg" id="confBg" onclick="if(event.target===this)_confFin(false)">
+    <div class="sheet conf">
+        <div class="ic" id="confIc">🗑️</div>
+        <div class="tx" id="confTx"></div>
+        <div class="sub" id="confSub"></div>
+        <div class="bts"><button onclick="_confFin(false)">No</button><button class="si" id="confSi" onclick="_confFin(true)">Sí</button></div>
     </div>
 </div>
 
@@ -592,8 +612,18 @@
         cfg.copias = Math.max(1, Math.min(20, cfg.copias + d));
         $('copiasVal').innerHTML = '<b>' + cfg.copias + '</b>' + (cfg.copias === 1 ? 'copia' : 'copias');
     }
-    function borrarTodo() {
-        if (textoPlano() && !confirm('¿Borrar todo el texto?')) return;
+    // Pregunta Sí / No con botones grandes
+    let _confRes = null;
+    function confirmar(ic, tx, sub, siTxt, siVerde) {
+        $('confIc').textContent = ic; $('confTx').textContent = tx; $('confSub').textContent = sub || '';
+        $('confSi').textContent = siTxt || 'Sí'; $('confSi').classList.toggle('ok', !!siVerde);
+        ed.inputMode = 'none'; ed.blur();
+        $('confBg').classList.add('show');
+        return new Promise(res => { _confRes = res; });
+    }
+    function _confFin(v) { $('confBg').classList.remove('show'); const r = _confRes; _confRes = null; if (r) r(v); }
+    async function borrarTodo() {
+        if (textoPlano() && !(await confirmar('🗑️', '¿Borrar todo el texto?', 'Si te arrepentís, tocá ↶ para recuperarlo.', 'Sí, borrar'))) return;
         snap(); ed.innerHTML = '<div><br></div>'; ed.style.textAlign = ''; guardarBorrador(); refrescar();
     }
     function textoPlano() { return ed.innerText.replace(/ /g, ' ').trim(); }
@@ -622,7 +652,7 @@
     let _ultimoJob = null;
     async function imprimir(targetForzado) {
         if (!textoPlano()) { toast('Escribí algo primero', 'err'); ed.focus(); return; }
-        if (esLabel() && !cfg.auto && !entra(baseActual()) && !confirm('No entra entero en la etiqueta (se va a cortar). ¿Imprimir igual?')) return;
+        if (esLabel() && !cfg.auto && !entra(baseActual()) && !(await confirmar('✂️', 'No entra entero en la etiqueta', 'Se va a cortar. ¿Imprimir igual?', 'Sí, imprimir', true))) return;
         const target = targetForzado || targetActual();
         const btn = $('printBtn');
         btn.disabled = true; btn.textContent = '⏳ Mandando…';
@@ -680,7 +710,7 @@
     function getUltimos() { try { return JSON.parse(localStorage.getItem('imp_ultimos') || '[]'); } catch (e) { return []; } }
     function guardarUltimo(titulo, target) {
         let l = getUltimos().filter(u => u.html !== ed.innerHTML);
-        l.unshift({ titulo, target, html: ed.innerHTML, base: baseActual(), auto: cfg.auto, orient: cfg.orient, troquel: cfg.troquel, at: Date.now() });
+        l.unshift({ titulo, target, html: ed.innerHTML, base: baseActual(), auto: cfg.auto, orient: cfg.orient, troquel: cfg.troquel, prev: vistaPapel(), at: Date.now() });
         try { localStorage.setItem('imp_ultimos', JSON.stringify(l.slice(0, 25))); } catch (e) {}
     }
     function fecha(ts) {
@@ -689,11 +719,30 @@
         return d.toDateString() === hoy.toDateString() ? 'Hoy ' + h : d.toDateString() === ayer.toDateString() ? 'Ayer ' + h : d.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit' }) + ' ' + h;
     }
     const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+    // Copia de cómo se veía la etiqueta (para la imagen chiquita del historial)
+    function vistaPapel() {
+        const c = $('paper').cloneNode(true);
+        c.removeAttribute('id');
+        c.querySelectorAll('[id]').forEach(e => e.removeAttribute('id'));
+        c.querySelectorAll('[contenteditable]').forEach(e => e.removeAttribute('contenteditable'));
+        return c.outerHTML;
+    }
+    function miniatura(u) {
+        let h = u.prev, cls;
+        if (!h) {   // impresos de antes (sin copia guardada): se arma con el texto
+            cls = u.target === 'etiqueta' ? 'label' : u.target === 'grande' ? 'grande ' + (u.orient || 'h') + ((u.troquel || 'rep') !== 'todo' ? ' conT' : '') : 'ticket';
+            h = '<div class="paper ' + cls + '" style="--s:' + TROQUEL + 'px"><div class="mainBox"><div class="ed" style="--b:' + u.base + 'px;font-size:' + u.base + 'px">' + u.html + '</div></div></div>';
+        }
+        const grandeH = / grande h/.test(h.slice(0, 80)), grandeV = / grande v/.test(h.slice(0, 80)), lab = / label/.test(h.slice(0, 80));
+        const w = grandeH ? 504 : 265, alto = grandeH ? 265 : grandeV ? 504 : lab ? 207 : 0;
+        const z = alto ? Math.min(116 / w, 96 / alto) : 116 / w;
+        return '<div class="mini"><div style="zoom:' + z.toFixed(3) + (alto ? '' : ';align-self:flex-start') + '">' + h + '</div></div>';
+    }
     function abrirUltimos() {
         const l = getUltimos();
         $('ultList').innerHTML = l.length ? l.map((u, i) =>
-            '<div class="ult" onclick="usarUltimo(' + i + ')"><div class="ico">' + (DEST[u.target] || DEST.oficina).ico + '</div>' +
-            '<div class="tx"><b>' + esc(u.titulo || '(sin texto)') + '</b><small>' + fecha(u.at) + ' · ' + (DEST[u.target] || DEST.oficina).nom + '</small></div>' +
+            '<div class="ult" onclick="usarUltimo(' + i + ')">' + miniatura(u) +
+            '<div class="tx"><b>' + esc(u.titulo || '(sin texto)') + '</b><small>' + (DEST[u.target] || DEST.oficina).ico + ' ' + (DEST[u.target] || DEST.oficina).nom + '<br>' + fecha(u.at) + '</small></div>' +
             '<button class="x" onclick="event.stopPropagation();borrarUltimo(' + i + ')">✕</button></div>').join('')
             : '<div class="vacio">Todavía no imprimiste nada desde acá.</div>';
         $('ultBg').classList.add('show');
