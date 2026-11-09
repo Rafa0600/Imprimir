@@ -109,12 +109,14 @@
     .sheet .acciones .pri { background: var(--primary); border-color: var(--primary); color: #fff; }
 
     .bottom .gopts { margin: 0; }
-    .bottom .tools { position: static; display: flex; flex-wrap: nowrap; align-items: stretch; gap: 4px; padding: 0; background: none; }
+    .bottom .tools { position: static; display: flex; flex-wrap: nowrap; align-items: stretch; gap: 3px; padding: 0; background: none; }
     .bottom .tools .tb { flex: 1 1 0; min-width: 0; height: 42px; padding: 0; }
-    .bottom .tools .val { flex: 0 0 32px; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
+    .bottom .tools .val { flex: 0 0 28px; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
     .bottom .tools .val { text-align: center; font-size: 0.66em; font-weight: 800; color: var(--text-2); line-height: 1.1; }
     .bottom .tools .val b { display: block; font-size: 1.4em; color: var(--text); }
-    .bottom .tools .autoBtn { flex: 1.5 1 0; min-width: 0; height: 42px; padding: 0 2px; }
+    #undoBtn { font-size: 1.2em; }
+    #undoBtn.vacio { opacity: 0.35; }
+    .bottom .tools .autoBtn { flex: 1.35 1 0; min-width: 0; height: 42px; padding: 0 2px; }
     .tsep { flex: 0 0 2px; }
     .ico { flex: none; width: 46px; height: 50px; border-radius: 14px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text); font-size: 1.25em; cursor: pointer; }
     .bottom .copias span { min-width: 44px; }
@@ -199,6 +201,7 @@
             </div>
         </div>
         <div class="tools" id="tools">
+            <button class="tb" id="undoBtn" onpointerdown="event.preventDefault()" onclick="deshacer()" title="Deshacer el último cambio">↶</button>
             <button class="tb" onpointerdown="event.preventDefault()" onclick="fmtBold()" title="Negrita"><b>B</b></button>
             <button class="tb" onpointerdown="event.preventDefault()" onclick="fmtTam(-1)" title="Más chico">A−</button>
             <button class="tb" onpointerdown="event.preventDefault()" onclick="fmtTam(1)" title="Más grande" style="font-size:1.1em">A+</button>
@@ -442,6 +445,7 @@
         });
     }
     function fmtTam(d) {
+        snap();
         asegurarDivs();
         const s0 = getSelection();
         const habiaParte = s0.rangeCount && ed.contains(s0.anchorNode) && !s0.isCollapsed;
@@ -468,6 +472,7 @@
     }
     // Blanco sobre negro: sin selección (o varias líneas) → la línea entera; con una parte → solo esa parte. Tocar de nuevo lo saca.
     function fmtInv() {
+        snap();
         asegurarDivs();
         const s0 = getSelection();
         const habiaParte = s0.rangeCount && ed.contains(s0.anchorNode) && !s0.isCollapsed;
@@ -493,7 +498,7 @@
         }
         refrescar(); guardarBorrador();
     }
-    function fmtBold() { if (!tomarSeleccion()) return; document.execCommand('bold'); refrescar(); guardarBorrador(); }
+    function fmtBold() { snap(); if (!tomarSeleccion()) return; document.execCommand('bold'); refrescar(); guardarBorrador(); }
     const ICO_AL = { Left: '⇤', Center: '↔', Right: '⇥' };
     function fmtAlignCiclo() {
         const s = getSelection();
@@ -506,12 +511,57 @@
         $('alignBtn').textContent = ICO_AL[sig];
     }
     function fmtAlign(a) {
+        snap();
         const s = getSelection();
         if (!(s.rangeCount && ed.contains(s.anchorNode)) && _rango) { s.removeAllRanges(); s.addRange(_rango); }
         if (!ed.contains(getSelection().anchorNode)) { ed.focus(); }
         document.execCommand('justify' + a); refrescar();
     }
     document.execCommand('styleWithCSS', false, false);
+    // ───── Deshacer (↶): guarda cómo estaba antes de cada cambio ─────
+    const _hist = [];
+    let _ultTipeo = 0;
+    function snap() {
+        const st = { h: ed.innerHTML, al: ed.style.textAlign || '' };
+        const u = _hist[_hist.length - 1];
+        if (!u || u.h !== st.h || u.al !== st.al) { _hist.push(st); if (_hist.length > 60) _hist.shift(); }
+        verUndo();
+    }
+    function verUndo() { $('undoBtn').classList.toggle('vacio', !_hist.length); }
+    function deshacer() {
+        const st = _hist.pop();
+        if (!st) { toast('No hay nada para deshacer', ''); return; }
+        ed.innerHTML = st.h; ed.style.textAlign = st.al;
+        _rango = null; refrescar(); guardarBorrador(); verUndo();
+    }
+    // Lo que se escribe seguido cuenta como un solo cambio
+    ed.addEventListener('beforeinput', () => { const t = Date.now(); if (t - _ultTipeo > 1200) snap(); _ultTipeo = t; });
+
+    // ───── Teclado: solo sale al tocar la etiqueta para escribir ─────
+    // Los botones de formato no lo abren (inputmode none); un toque corto sobre la etiqueta sí.
+    ed.inputMode = 'none';
+    let _tp = null;
+    ed.addEventListener('pointerdown', e => { _tp = { t: Date.now(), x: e.clientX, y: e.clientY }; });
+    ed.addEventListener('pointerup', e => {
+        if (!_tp) return;
+        const corto = Date.now() - _tp.t < 400 && Math.abs(e.clientX - _tp.x) < 12 && Math.abs(e.clientY - _tp.y) < 12;
+        _tp = null;
+        if (corto) modoEscribir();
+    });
+    function modoEscribir() {
+        if (ed.inputMode === 'text') return;
+        ed.inputMode = 'text';
+        setTimeout(() => {   // re-enfocar para que aparezca el teclado, sin perder dónde está el cursor
+            const sel = getSelection();
+            const r = sel.rangeCount && ed.contains(sel.anchorNode) ? sel.getRangeAt(0).cloneRange() : null;
+            ed.blur(); ed.focus();
+            if (r) { sel.removeAllRanges(); sel.addRange(r); }
+        }, 0);
+    }
+    // Cualquier botón de abajo esconde el teclado (y no lo vuelve a abrir)
+    $('bottom').addEventListener('pointerdown', () => { ed.inputMode = 'none'; }, true);
+    document.querySelectorAll('#dest button').forEach(b => b.addEventListener('pointerdown', () => { ed.inputMode = 'none'; }));
+
     ed.addEventListener('input', () => {
         if (!ed.innerHTML.trim() || ed.innerHTML === '<br>') ed.innerHTML = '<div><br></div>';
         refrescar(); guardarBorrador();
@@ -531,7 +581,7 @@
     }
     function borrarTodo() {
         if (textoPlano() && !confirm('¿Borrar todo el texto?')) return;
-        ed.innerHTML = '<div><br></div>'; guardarBorrador(); refrescar(); ed.focus();
+        snap(); ed.innerHTML = '<div><br></div>'; ed.style.textAlign = ''; guardarBorrador(); refrescar();
     }
     function textoPlano() { return ed.innerText.replace(/ /g, ' ').trim(); }
 
@@ -638,7 +688,7 @@
     function cerrarUltimos() { $('ultBg').classList.remove('show'); }
     function usarUltimo(i) {
         const u = getUltimos()[i]; if (!u) return;
-        ed.innerHTML = u.html;
+        snap(); ed.innerHTML = u.html;
         if (u.target === 'grande') { if (u.orient) cfg.orient = u.orient; if (u.troquel) cfg.troquel = u.troquel; }
         if (u.target === 'oficina' || u.target === 'deposito') { cfg.ticket = u.target; setDest('ticket'); }
         else setDest(DEST[u.target] ? u.target : 'etiqueta');
@@ -668,6 +718,7 @@
     // ───── Inicio ─────
     try { const b = localStorage.getItem('imp_borrador'); if (b) ed.innerHTML = b; } catch (e) {}
     setDest(cfg.dest);
+    verUndo();
     (() => {
         const b = $('bottom');
         const fit = () => {
