@@ -57,6 +57,10 @@
     .gopts { display: flex; gap: 6px; align-items: center; margin: -2px 0 8px; }
     .gchip { height: 34px; padding: 0 10px; border-radius: 17px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text); font-weight: 800; font-size: 0.76em; white-space: nowrap; cursor: pointer; }
     .seg { flex: 1; display: flex; min-width: 0; border: 1px solid var(--border); border-radius: 17px; overflow: hidden; background: var(--bg-card); }
+    .stubTam { flex: none; display: flex; align-items: center; height: 34px; border: 1px solid var(--border); border-radius: 17px; background: var(--bg-card); overflow: hidden; }
+    .stubTam button { width: 30px; height: 100%; border: none; background: transparent; color: var(--text); font-size: 1.05em; font-weight: 900; cursor: pointer; }
+    .stubTam span { min-width: 30px; text-align: center; font-size: 0.72em; line-height: 1; }
+    .stubTam small { display: block; font-size: 0.85em; font-weight: 800; color: var(--text-2); }
     .seg button { flex: 1; min-width: 0; height: 32px; border: none; background: transparent; color: var(--text-2); font-weight: 800; font-size: 0.74em; white-space: nowrap; cursor: pointer; }
     .seg button.on { background: var(--primary); color: #fff; }
     .hint { font-size: 0.72em; color: var(--text-2); margin: 0 0 8px; line-height: 1.35; }
@@ -184,9 +188,14 @@
         <div class="gopts" id="grOpts" style="display:none">
             <button class="gchip" id="orBtn" onclick="cambiarOrient()">↔ Acostada</button>
             <div class="seg" id="segT">
-                <button data-t="rep" onclick="setTroquel('rep')">✂️ Repetir</button>
+                <button data-t="rep" onclick="setTroquel('rep')">Repetir</button>
                 <button data-t="vac" onclick="setTroquel('vac')">Vacío</button>
-                <button data-t="todo" onclick="setTroquel('todo')">Usar todo</button>
+                <button data-t="todo" onclick="setTroquel('todo')">Todo</button>
+            </div>
+            <div class="stubTam" id="stubTam">
+                <button onclick="cambiarStub(-1)">−</button>
+                <span id="stubPct">✂️<small>100%</small></span>
+                <button onclick="cambiarStub(1)">+</button>
             </div>
         </div>
         <div class="tools" id="tools">
@@ -259,9 +268,10 @@
         auto: guardado.auto !== false,       // etiquetas: la letra llena sola la etiqueta
         orient: guardado.orient === 'v' ? 'v' : 'h',                                  // grande: h = acostada, v = parada
         troquel: ['rep', 'vac', 'todo'].includes(guardado.troquel) ? guardado.troquel : 'rep',
+        stubPct: guardado.stubPct || 100,    // tamaño del texto del troquel (100% = lo más grande que entra)
         copias: 1,
     };
-    function guardarCfg() { try { localStorage.setItem('imp_cfg', JSON.stringify({ baseTicket: cfg.baseTicket, baseLabel: cfg.baseLabel, baseGrande: cfg.baseGrande, auto: cfg.auto, orient: cfg.orient, troquel: cfg.troquel })); } catch (e) {} }
+    function guardarCfg() { try { localStorage.setItem('imp_cfg', JSON.stringify({ baseTicket: cfg.baseTicket, baseLabel: cfg.baseLabel, baseGrande: cfg.baseGrande, auto: cfg.auto, orient: cfg.orient, troquel: cfg.troquel, stubPct: cfg.stubPct })); } catch (e) {} }
     const esLabel = () => cfg.dest === 'etiqueta' || cfg.dest === 'grande';
     const esGrande = () => cfg.dest === 'grande';
     const claseHoja = () => esGrande() ? 'grande ' + cfg.orient + (cfg.troquel !== 'todo' ? ' conT' : '') : esLabel() ? 'label' : 'ticket';
@@ -284,7 +294,9 @@
         $('paperBox').classList.toggle('label', esLabel());
         $('autoBtn').style.display = esLabel() ? '' : 'none';
         $('grOpts').style.display = esGrande() ? '' : 'none';
-        $('orBtn').textContent = cfg.orient === 'h' ? '↔ Acostada' : '↕ Parada';
+        $('orBtn').textContent = cfg.orient === 'h' ? '↔' : '↕';
+        $('orBtn').title = cfg.orient === 'h' ? 'Acostada (tocá para parada)' : 'Parada (tocá para acostada)';
+        $('stubTam').style.display = cfg.troquel === 'rep' ? '' : 'none';
         document.querySelectorAll('#segT button').forEach(b => b.classList.toggle('on', b.dataset.t === cfg.troquel));
         $('hint').innerHTML = esGrande()
             ? (cfg.troquel === 'rep' ? 'Lo que escribís sale grande, y en el troquel (lo precortado) se repite chiquito. ' : '') + '<b>AUTO</b> llena la etiqueta solo.'
@@ -294,6 +306,12 @@
         ajustarZoom(); refrescar();
     }
     function cambiarOrient() { cfg.orient = cfg.orient === 'h' ? 'v' : 'h'; guardarCfg(); setDest('grande'); }
+    // Texto repetido en el troquel: 100% = lo más grande que entra; con − se achica
+    function cambiarStub(d) {
+        if (d > 0 && cfg.stubPct >= 100) { toast('El troquel ya está en lo más grande que entra', ''); return; }
+        cfg.stubPct = Math.max(30, Math.min(100, cfg.stubPct + d * 10));
+        guardarCfg(); refrescar();
+    }
     function setTroquel(t) { cfg.troquel = t; guardarCfg(); setDest('grande'); }
     // Ticket: tocar = elegirlo; mantener apretado = cambiar Oficina ↔ Depósito
     let _lpT = 0, _lpHecho = false;
@@ -364,7 +382,8 @@
             // Troquel: el mismo texto en chiquito
             const st = $('stubEd');
             if (esGrande() && cfg.troquel === 'rep' && textoPlano()) {
-                _stubBase = ajustar(cajaStub(), 60);
+                _stubBase = Math.max(4, Math.round(ajustar(cajaStub(), 60) * cfg.stubPct / 10) / 10);
+                $('stubPct').innerHTML = '✂️<small>' + cfg.stubPct + '%</small>';
                 st.innerHTML = ed.innerHTML;
                 st.style.setProperty('--b', _stubBase + 'px'); st.style.fontSize = _stubBase + 'px';
                 st.style.textAlign = ed.style.textAlign || '';
