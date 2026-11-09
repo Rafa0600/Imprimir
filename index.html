@@ -633,8 +633,11 @@
     $('topfix').addEventListener('pointerdown', () => { ed.inputMode = 'none'; }, true);
     document.querySelectorAll('#dest button').forEach(b => b.addEventListener('pointerdown', () => { ed.inputMode = 'none'; }));
 
+    // Texto nuevo (vacío) = siempre arranca en AUTO, salvo que lo apagues mientras escribís
+    function autoParaNuevo() { if (!cfg.auto) { cfg.auto = true; guardarCfg(); } }
     ed.addEventListener('input', () => {
         if (!ed.innerHTML.trim() || ed.innerHTML === '<br>') ed.innerHTML = '<div><br></div>';
+        if (!textoPlano()) autoParaNuevo();
         refrescar(); guardarBorrador();
     });
     // Pegar = solo texto (sin colores ni letras raras de otras apps)
@@ -662,7 +665,7 @@
     function _confFin(v) { $('confBg').classList.remove('show'); const r = _confRes; _confRes = null; if (r) r(v); }
     async function borrarTodo() {
         if (textoPlano() && !(await confirmar('🗑️', '¿Borrar todo el texto?', 'Si te arrepentís, tocá ↶ para recuperarlo.', 'Sí, borrar'))) return;
-        snap(); ed.innerHTML = '<div><br></div>'; ed.style.textAlign = ''; guardarBorrador(); refrescar();
+        snap(); ed.innerHTML = '<div><br></div>'; ed.style.textAlign = ''; autoParaNuevo(); guardarBorrador(); refrescar();
     }
     function textoPlano() { return ed.innerText.replace(/ /g, ' ').trim(); }
 
@@ -817,6 +820,7 @@
 
     // ───── Inicio ─────
     try { const b = localStorage.getItem('imp_borrador'); if (b) ed.innerHTML = b; } catch (e) {}
+    if (!textoPlano()) autoParaNuevo();
     setDest(cfg.dest);
     verUndo();
     (() => {
