@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <meta name="theme-color" content="#0f1a30">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -108,19 +108,28 @@
     .sheet .acciones button { flex: 1; height: 46px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text); font-weight: 800; cursor: pointer; }
     .sheet .acciones .pri { background: var(--primary); border-color: var(--primary); color: #fff; }
 
-    .bottom .gopts { margin: 0; }
-    .bottom .tools { position: static; display: flex; flex-wrap: nowrap; align-items: stretch; gap: 3px; padding: 0; background: none; }
-    .bottom .tools .tb { flex: 1 1 0; min-width: 0; height: 42px; padding: 0; }
-    .bottom .tools .val { flex: 0 0 28px; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
-    .bottom .tools .val { text-align: center; font-size: 0.66em; font-weight: 800; color: var(--text-2); line-height: 1.1; }
-    .bottom .tools .val b { display: block; font-size: 1.4em; color: var(--text); }
+    .topfix .gopts { margin: 0; }
+    .topfix .tools { position: static; display: flex; flex-wrap: nowrap; align-items: stretch; gap: 3px; padding: 0; background: none; }
+    .topfix .tools .tb { flex: 1 1 0; min-width: 0; height: 42px; padding: 0; }
+    .topfix .tools .val { flex: 0 0 28px; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
+    .topfix .tools .val { text-align: center; font-size: 0.66em; font-weight: 800; color: var(--text-2); line-height: 1.1; }
+    .topfix .tools .val b { display: block; font-size: 1.4em; color: var(--text); }
     #undoBtn { font-size: 1.2em; }
     #undoBtn.vacio { opacity: 0.35; }
-    .bottom .tools .autoBtn { flex: 1.35 1 0; min-width: 0; height: 42px; padding: 0 2px; }
+    .topfix .tools .autoBtn { flex: 1.35 1 0; min-width: 0; height: 42px; padding: 0 2px; }
     .tsep { flex: 0 0 2px; }
     .ico { flex: none; width: 46px; height: 50px; border-radius: 14px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text); font-size: 1.25em; cursor: pointer; }
     .bottom .copias span { min-width: 44px; }
     .bottom .copias button { width: 32px; }
+    .topfix { position: fixed; top: 0; left: 0; right: 0; z-index: 30; background: var(--bg-card); border-bottom: 1px solid var(--border); padding: 0 16px 8px; padding-top: env(safe-area-inset-top); }
+    .topfix .in { max-width: 520px; margin: 0 auto; display: flex; flex-direction: column; gap: 7px; }
+    .topfix .top { padding: 7px 0 0; background: none; border: none; }
+    .topfix .top h1 { font-size: 0.95em; }
+    .bottom .dest { margin: 0; gap: 5px; }
+    .bottom .dest button { min-height: 38px; padding: 3px 4px !important; gap: 5px; border-width: 1.5px; border-radius: 10px; font-size: 0.74em; }
+    .bottom .dest button span { font-size: 1.15em !important; }
+    .bottom .dest button small { font-size: 0.85em; }
+    .wrap { padding-top: 10px; }
     #paper.ticket .ed { min-height: 110px; }   /* solo en pantalla: lugar para escribir */
     #paper.grande.h.conT .stub { border-right: 2px dashed #4facfe; }   /* solo en pantalla: dónde está el troquel */
     #paper.grande.v.conT .stub { border-bottom: 2px dashed #4facfe; }
@@ -159,34 +168,12 @@
 </head>
 <body>
 
-<div class="top">
-    <h1>🖨️ Imprimir</h1>
-    <div class="estado" id="estado">⏳ Viendo la PC…</div>
-</div>
-
-<div class="wrap">
-    <div class="dest" id="dest">
-        <button data-d="etiqueta" onclick="setDest('etiqueta')"><span>🏷️</span><i>Etiqueta</i></button>
-        <button data-d="grande" onclick="setDest('grande')"><span>📦</span><i>Etiqueta grande</i></button>
-        <button data-d="ticket" id="btnTicket" onclick="tocarTicket()" oncontextmenu="event.preventDefault()"><span>🎫</span><i>Ticket<small id="ticketQue">Oficina</small></i></button>
-    </div>
-
-    <div class="paper-wrap">
-        <div class="paper-box" id="paperBox">
-            <div class="paper ticket" id="paper">
-                <div class="stub"><div class="stubIn"><div class="ed" id="stubEd"></div></div></div>
-                <div class="mainBox"><div class="ed" id="ed" contenteditable="true" spellcheck="false"><div><br></div></div></div>
-            </div>
-        </div>
-    </div>
-    <div class="aviso" id="aviso"></div>
-</div>
-
-<div id="medidor"></div>
-<p id="hint" hidden></p>
-
-<div class="bottom" id="bottom">
+<div class="topfix" id="topfix">
     <div class="in">
+    <div class="top">
+        <h1>🖨️ Imprimir</h1>
+        <div class="estado" id="estado">⏳ Viendo la PC…</div>
+    </div>
         <div class="gopts" id="grOpts" style="display:none">
             <button class="gchip" id="orBtn" onclick="cambiarOrient()">↔ Acostada</button>
             <div class="seg" id="segT">
@@ -212,6 +199,31 @@
             <div class="val" id="baseVal"><b>16</b>tam.</div>
             <button class="tb" onpointerdown="event.preventDefault()" onclick="cambiarBase(1)">+</button>
             <button class="autoBtn" id="autoBtn" onpointerdown="event.preventDefault()" onclick="toggleAuto()" title="La letra se agranda sola hasta llenar la etiqueta">AUTO</button>
+        </div>
+    </div>
+</div>
+
+<div class="wrap">
+    <div class="paper-wrap">
+        <div class="paper-box" id="paperBox">
+            <div class="paper ticket" id="paper">
+                <div class="stub"><div class="stubIn"><div class="ed" id="stubEd"></div></div></div>
+                <div class="mainBox"><div class="ed" id="ed" contenteditable="true" spellcheck="false"><div><br></div></div></div>
+            </div>
+        </div>
+    </div>
+    <div class="aviso" id="aviso"></div>
+</div>
+
+<div id="medidor"></div>
+<p id="hint" hidden></p>
+
+<div class="bottom" id="bottom">
+    <div class="in">
+        <div class="dest" id="dest">
+            <button data-d="etiqueta" onclick="setDest('etiqueta')"><span>🏷️</span><i>Etiqueta</i></button>
+            <button data-d="grande" onclick="setDest('grande')"><span>📦</span><i>Etiqueta grande</i></button>
+            <button data-d="ticket" id="btnTicket" onclick="tocarTicket()" oncontextmenu="event.preventDefault()"><span>🎫</span><i>Ticket<small id="ticketQue">Oficina</small></i></button>
         </div>
         <div class="row">
             <div class="copias">
@@ -560,6 +572,7 @@
     }
     // Cualquier botón de abajo esconde el teclado (y no lo vuelve a abrir)
     $('bottom').addEventListener('pointerdown', () => { ed.inputMode = 'none'; }, true);
+    $('topfix').addEventListener('pointerdown', () => { ed.inputMode = 'none'; }, true);
     document.querySelectorAll('#dest button').forEach(b => b.addEventListener('pointerdown', () => { ed.inputMode = 'none'; }));
 
     ed.addEventListener('input', () => {
@@ -720,13 +733,14 @@
     setDest(cfg.dest);
     verUndo();
     (() => {
-        const b = $('bottom');
+        const b = $('bottom'), t = $('topfix');
         const fit = () => {
             const h = b.offsetHeight;
             document.body.style.paddingBottom = (h + 14) + 'px';
+            document.body.style.paddingTop = t.offsetHeight + 'px';
             $('toast').style.bottom = (h + 12) + 'px';
         };
-        try { new ResizeObserver(fit).observe(b); } catch (e) {}
+        try { const ro = new ResizeObserver(fit); ro.observe(b); ro.observe(t); } catch (e) {}
         fit();
     })();
     verEstado();
