@@ -29,7 +29,7 @@
 
     /* Destino */
     .dest { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 10px; }
-    .dest button { padding: 10px 4px 9px; border-radius: 12px; border: 2px solid var(--border); background: var(--bg-card); color: var(--text); font-weight: 800; font-size: 0.8em; line-height: 1.2; cursor: pointer; }
+    .dest button { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; touch-action: manipulation; padding: 10px 4px 9px; border-radius: 12px; border: 2px solid var(--border); background: var(--bg-card); color: var(--text); font-weight: 800; font-size: 0.8em; line-height: 1.2; cursor: pointer; }
     .dest button span { display: block; font-size: 1.5em; margin-bottom: 2px; }
     .dest button small { display: block; font-weight: 600; font-size: 0.82em; color: var(--text-2); }
     .dest button.on { border-color: var(--primary); background: rgba(79,172,254,0.15); }
@@ -43,13 +43,22 @@
     .grp { display: inline-flex; gap: 4px; }
     .sep { width: 1px; height: 28px; background: var(--border); margin: 0 2px; }
     .tam { display: inline-flex; align-items: center; gap: 4px; margin-left: auto; }
-    .tam .val.auto b { color: var(--success); }
-    .tam .val { cursor: pointer; min-width: 50px; text-align: center; font-size: 0.78em; font-weight: 800; color: var(--text-2); line-height: 1.1; }
-    .tam .val b { display: block; font-size: 1.25em; color: var(--text); }
+    .tools .tb { min-width: 34px; padding: 0 6px; }
+    .tam .val { min-width: 30px; text-align: center; font-size: 0.66em; font-weight: 800; color: var(--text-2); line-height: 1.1; }
+    .tam .val b { display: block; font-size: 1.4em; color: var(--text); }
+    .autoBtn { height: 40px; min-width: 54px; padding: 0 6px; border-radius: 10px; border: 2px solid var(--success); background: transparent; color: var(--success); font-weight: 900; font-size: 0.8em; line-height: 1.05; cursor: pointer; }
+    .autoBtn small { display: block; font-size: 0.75em; font-weight: 700; color: var(--text-2); }
+    .autoBtn.on { background: var(--success); color: #05301f; }
+    /* Opciones de la etiqueta grande */
+    .gopts { display: flex; gap: 6px; align-items: center; margin: -2px 0 8px; }
+    .gchip { height: 34px; padding: 0 10px; border-radius: 17px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text); font-weight: 800; font-size: 0.76em; white-space: nowrap; cursor: pointer; }
+    .seg { flex: 1; display: flex; min-width: 0; border: 1px solid var(--border); border-radius: 17px; overflow: hidden; background: var(--bg-card); }
+    .seg button { flex: 1; min-width: 0; height: 32px; border: none; background: transparent; color: var(--text-2); font-weight: 800; font-size: 0.74em; white-space: nowrap; cursor: pointer; }
+    .seg button.on { background: var(--primary); color: #fff; }
     .hint { font-size: 0.72em; color: var(--text-2); margin: 0 0 8px; line-height: 1.35; }
 
     /* Papel (= lo que sale impreso) */
-    .paper-wrap { display: flex; justify-content: center; padding: 6px 0 4px; }
+    .paper-wrap { display: flex; justify-content: center; padding: 6px 0 4px; overflow: hidden; }
     .paper-box { background: #fff; border-radius: 6px; box-shadow: 0 6px 24px rgba(0,0,0,0.45); position: relative; }
     .paper-box.label { outline: 2px dashed rgba(79,172,254,0.55); outline-offset: 3px; }
     .aviso { text-align: center; font-size: 0.78em; font-weight: 700; color: var(--danger); min-height: 1.2em; margin-top: 8px; }
@@ -92,6 +101,8 @@
     .sheet .acciones .pri { background: var(--primary); border-color: var(--primary); color: #fff; }
 
     #paper.ticket .ed { min-height: 110px; }   /* solo en pantalla: lugar para escribir */
+    #paper.grande.h.conT .stub { border-right: 2px dashed #4facfe; }   /* solo en pantalla: dónde está el troquel */
+    #paper.grande.v.conT .stub { border-bottom: 2px dashed #4facfe; }
     #medidor { position: absolute; left: -9999px; top: 0; visibility: hidden; }
 </style>
 <!-- El mismo CSS va adentro del ticket que se imprime: así sale igual que en la pantalla -->
@@ -103,6 +114,20 @@
     .paper.ticket .ed { overflow-wrap: anywhere; }
     .ed b, .ed strong { font-weight: 700; }
     .ed div, .ed p { margin: 0; }
+    /* Etiqueta grande 10x19 con troquel: --s = ancho del pedazo precortado */
+    .mainBox { display: contents; }
+    .stub { display: none; }
+    .paper.grande { position: relative; overflow: hidden; padding: 0; }
+    .paper.grande.h { width: 504px; height: 265px; }
+    .paper.grande.v { width: 265px; height: 504px; }
+    .paper.grande .mainBox { display: flex; align-items: center; position: absolute; left: 0; top: 0; right: 0; bottom: 0; padding: 8px; box-sizing: border-box; overflow: hidden; }
+    .paper.grande.h.conT .mainBox { left: var(--s); }
+    .paper.grande.v.conT .mainBox { top: var(--s); }
+    .paper.grande.conT .stub { display: block; position: absolute; left: 0; top: 0; overflow: hidden; box-sizing: border-box; }
+    .paper.grande.h.conT .stub { width: var(--s); height: 265px; }
+    .paper.grande.v.conT .stub { width: 265px; height: var(--s); }
+    .stubIn { display: flex; align-items: center; box-sizing: border-box; padding: 6px; position: absolute; left: 0; top: 0; width: 265px; height: var(--s); overflow: hidden; }
+    .paper.grande.h .stubIn { top: 265px; transform-origin: 0 0; transform: rotate(-90deg); }   /* se lee de abajo para arriba */
 </style>
 </head>
 <body>
@@ -114,9 +139,17 @@
 
 <div class="wrap">
     <div class="dest" id="dest">
-        <button data-d="deposito" onclick="setDest('deposito')"><span>🎫</span>Ticket<small>Depósito</small></button>
-        <button data-d="oficina" onclick="setDest('oficina')"><span>🎫</span>Ticket<small>Oficina</small></button>
-        <button data-d="etiqueta" onclick="setDest('etiqueta')"><span>🏷️</span>Etiqueta<small>DP 55×43</small></button>
+        <button data-d="etiqueta" onclick="setDest('etiqueta')"><span>🏷️</span>Etiqueta</button>
+        <button data-d="grande" onclick="setDest('grande')"><span>📦</span>Etiqueta grande</button>
+        <button data-d="ticket" id="btnTicket" onclick="tocarTicket()" oncontextmenu="event.preventDefault()"><span>🎫</span>Ticket<small id="ticketQue">Oficina</small></button>
+    </div>
+    <div class="gopts" id="grOpts" style="display:none">
+        <button class="gchip" id="orBtn" onclick="cambiarOrient()">↔ Acostada</button>
+        <div class="seg" id="segT">
+            <button data-t="rep" onclick="setTroquel('rep')">✂️ Repetir</button>
+            <button data-t="vac" onclick="setTroquel('vac')">Vacío</button>
+            <button data-t="todo" onclick="setTroquel('todo')">Usar todo</button>
+        </div>
     </div>
 
     <div class="tools" id="tools">
@@ -128,16 +161,18 @@
         <button class="tb" id="alignBtn" onpointerdown="event.preventDefault()" onclick="fmtAlignCiclo()" title="Alinear la línea (centro → izquierda → derecha)">↔</button>
         <div class="tam">
             <button class="tb" onpointerdown="event.preventDefault()" onclick="cambiarBase(-1)">−</button>
-            <div class="val" id="baseVal" onpointerdown="event.preventDefault()" onclick="if(esLabel())toggleAuto()"><b>16</b>tamaño</div>
+            <div class="val" id="baseVal"><b>16</b>tam.</div>
             <button class="tb" onpointerdown="event.preventDefault()" onclick="cambiarBase(1)">+</button>
+            <button class="autoBtn" id="autoBtn" onpointerdown="event.preventDefault()" onclick="toggleAuto()" title="La letra se agranda sola hasta llenar la etiqueta">AUTO</button>
         </div>
     </div>
-    <p class="hint" id="hint">Elegí una parte del texto (o dejá el cursor en una línea) y tocá <b>B</b> / <b>A+</b> / <b>A−</b>. <span id="hintEtq"></span></p>
+    <p class="hint" id="hint"></p>
 
     <div class="paper-wrap">
         <div class="paper-box" id="paperBox">
             <div class="paper ticket" id="paper">
-                <div class="ed" id="ed" contenteditable="true" spellcheck="false"><div><br></div></div>
+                <div class="stub"><div class="stubIn"><div class="ed" id="stubEd"></div></div></div>
+                <div class="mainBox"><div class="ed" id="ed" contenteditable="true" spellcheck="false"><div><br></div></div></div>
             </div>
         </div>
     </div>
@@ -183,81 +218,141 @@
 <script>
     const API = 'https://mikra-print.rafaelassir.workers.dev';
     const KEY = 'AG4LFDaR5Yhl8QccEtwltnvH';
-    const CSS_W = 265;                       // ancho del papel en la página (= 72 mm del ticket / 55 mm de la etiqueta)
+    const CSS_W = 265;                       // ancho del papel en la página (= 72 mm del ticket / 55 mm de la etiqueta / 100 mm de la grande)
+    const G_LARGO = 504;                     // etiqueta grande: 190 mm de largo (calibrada así: con 200 la Honeywell se pone en rojo)
+    const TROQUEL = 106;                     // pedazo precortado de la grande: ~40 mm
+    // Acostada: la PC imprime la hoja parada (100 de ancho), así que se gira; el troquel queda al principio de la etiqueta
+    const GIRO = 'translateX(265px) rotate(90deg)';
     const LV = { 1: 0.6, 2: 0.78, 3: 1, 4: 1.3, 5: 1.7, 6: 2.2, 7: 2.9 };   // tamaños de A− / A+ (relativos al tamaño base)
-    const DEST = {
-        deposito: { ico: '🎫', nom: 'Ticket depósito' },
+    const DEST = {   // impresoras de la PC (target del Worker)
+        etiqueta: { ico: '🏷️', nom: 'Etiqueta' },
+        grande: { ico: '📦', nom: 'Etiqueta grande' },
         oficina: { ico: '🎫', nom: 'Ticket oficina' },
-        etiqueta: { ico: '🏷️', nom: 'Etiqueta DP' },
+        deposito: { ico: '🎫', nom: 'Ticket depósito' },
     };
     const $ = id => document.getElementById(id);
     const ed = $('ed');
 
     const guardado = (() => { try { return JSON.parse(localStorage.getItem('imp_cfg') || '{}'); } catch (e) { return {}; } })();
     const cfg = {
-        dest: DEST[guardado.dest] ? guardado.dest : 'deposito',
+        dest: 'etiqueta',                    // siempre arranca en Etiqueta (la más usada)
+        ticket: 'oficina',                   // ticket = oficina; mantener apretado → depósito
         baseTicket: guardado.baseTicket || 16,
         baseLabel: guardado.baseLabel || 28,
-        auto: guardado.auto !== false,       // etiqueta: llenar sola
+        baseGrande: guardado.baseGrande || 60,
+        auto: guardado.auto !== false,       // etiquetas: la letra llena sola la etiqueta
+        orient: guardado.orient === 'v' ? 'v' : 'h',                                  // grande: h = acostada, v = parada
+        troquel: ['rep', 'vac', 'todo'].includes(guardado.troquel) ? guardado.troquel : 'rep',
         copias: 1,
     };
-    function guardarCfg() { try { localStorage.setItem('imp_cfg', JSON.stringify({ dest: cfg.dest, baseTicket: cfg.baseTicket, baseLabel: cfg.baseLabel, auto: cfg.auto })); } catch (e) {} }
-    const esLabel = () => cfg.dest === 'etiqueta';
+    function guardarCfg() { try { localStorage.setItem('imp_cfg', JSON.stringify({ baseTicket: cfg.baseTicket, baseLabel: cfg.baseLabel, baseGrande: cfg.baseGrande, auto: cfg.auto, orient: cfg.orient, troquel: cfg.troquel })); } catch (e) {} }
+    const esLabel = () => cfg.dest === 'etiqueta' || cfg.dest === 'grande';
+    const esGrande = () => cfg.dest === 'grande';
+    const claseHoja = () => esGrande() ? 'grande ' + cfg.orient + (cfg.troquel !== 'todo' ? ' conT' : '') : esLabel() ? 'label' : 'ticket';
+    const targetActual = () => cfg.dest === 'ticket' ? cfg.ticket : cfg.dest;
+    // Lugar libre para el texto (px css, sin márgenes)
+    function cajaMain() {
+        if (!esGrande()) return { w: 249, h: 191 };
+        const t = cfg.troquel !== 'todo' ? TROQUEL : 0;
+        return cfg.orient === 'h' ? { w: G_LARGO - t - 16, h: 265 - 16 } : { w: 249, h: G_LARGO - t - 16 };
+    }
+    const cajaStub = () => ({ w: 265 - 12, h: TROQUEL - 12 });
 
     // ───── Destino ─────
     function setDest(d) {
-        cfg.dest = d; guardarCfg();
+        cfg.dest = d;
         document.querySelectorAll('#dest button').forEach(b => b.classList.toggle('on', b.dataset.d === d));
-        $('paper').className = 'paper ' + (esLabel() ? 'label' : 'ticket');
+        $('ticketQue').textContent = cfg.ticket === 'deposito' ? 'Depósito' : 'Oficina';
+        $('paper').className = 'paper ' + claseHoja();
+        $('paper').style.setProperty('--s', TROQUEL + 'px');
         $('paperBox').classList.toggle('label', esLabel());
-        $('hintEtq').innerHTML = esLabel() ? 'Tocá el número del tamaño para <b>Auto</b> (llena la etiqueta).' : '';
+        $('autoBtn').style.display = esLabel() ? '' : 'none';
+        $('grOpts').style.display = esGrande() ? '' : 'none';
+        $('orBtn').textContent = cfg.orient === 'h' ? '↔ Acostada' : '↕ Parada';
+        document.querySelectorAll('#segT button').forEach(b => b.classList.toggle('on', b.dataset.t === cfg.troquel));
+        $('hint').innerHTML = esGrande()
+            ? (cfg.troquel === 'rep' ? 'Lo que escribís sale grande, y en el troquel (lo precortado) se repite chiquito. ' : '') + '<b>AUTO</b> llena la etiqueta solo.'
+            : esLabel()
+                ? '<b>AUTO</b> agranda la letra sola hasta llenar la etiqueta. Con <b>A+ / A−</b> agrandás una línea (o la parte marcada) más que el resto.'
+                : 'Elegí una parte del texto (o dejá el cursor en una línea) y tocá <b>B</b> / <b>A+</b> / <b>A−</b>. Mantené apretado <b>🎫 Ticket</b> para cambiar Oficina ↔ Depósito.';
         ajustarZoom(); refrescar();
     }
+    function cambiarOrient() { cfg.orient = cfg.orient === 'h' ? 'v' : 'h'; guardarCfg(); setDest('grande'); }
+    function setTroquel(t) { cfg.troquel = t; guardarCfg(); setDest('grande'); }
+    // Ticket: tocar = elegirlo; mantener apretado = cambiar Oficina ↔ Depósito
+    let _lpT = 0, _lpHecho = false;
+    function cambiarTicket() {
+        cfg.ticket = cfg.ticket === 'oficina' ? 'deposito' : 'oficina';
+        try { navigator.vibrate && navigator.vibrate(35); } catch (e) {}
+        setDest('ticket');
+        toast('🎫 Ticket → ' + (cfg.ticket === 'deposito' ? 'Depósito' : 'Oficina'), 'ok');
+    }
+    function tocarTicket() { if (_lpHecho) { _lpHecho = false; return; } setDest('ticket'); }
+    (() => {
+        const b = $('btnTicket');
+        const fin = () => clearTimeout(_lpT);
+        b.addEventListener('pointerdown', () => { _lpHecho = false; clearTimeout(_lpT); _lpT = setTimeout(() => { _lpHecho = true; cambiarTicket(); }, 500); });
+        ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => b.addEventListener(ev, fin));
+    })();
 
     // El papel se ve más grande en el celular, pero por dentro mide igual que lo impreso
     function ajustarZoom() {
-        const disp = Math.min(window.innerWidth - 32, 488);
-        const z = Math.max(1, disp / CSS_W);
+        const disp = Math.min(($('paperBox').parentNode.clientWidth || window.innerWidth - 32) - 8, 488);
+        const ancho = esGrande() && cfg.orient === 'h' ? G_LARGO : CSS_W;
+        const z = ancho > CSS_W ? disp / ancho : Math.max(1, disp / ancho);
         $('paperBox').style.zoom = z.toFixed(3);
     }
     window.addEventListener('resize', ajustarZoom);
 
     // ───── Tamaño base ─────
-    function baseActual() { return esLabel() ? cfg.baseLabel : cfg.baseTicket; }
+    const MAX_LABEL = () => esGrande() ? 400 : 140;
+    function baseActual() { return esGrande() ? cfg.baseGrande : cfg.dest === 'etiqueta' ? cfg.baseLabel : cfg.baseTicket; }
+    function ponerBase(v) { if (esGrande()) cfg.baseGrande = v; else if (cfg.dest === 'etiqueta') cfg.baseLabel = v; else cfg.baseTicket = v; }
     function cambiarBase(d) {
-        if (esLabel()) { cfg.auto = false; cfg.baseLabel = Math.max(6, Math.min(140, cfg.baseLabel + d * (cfg.baseLabel >= 30 ? 3 : 1))); }
+        const b = baseActual();
+        if (esLabel()) { cfg.auto = false; ponerBase(Math.max(6, Math.min(MAX_LABEL(), Math.round(b) + d * (b >= 60 ? 5 : b >= 30 ? 3 : 1)))); }
         else cfg.baseTicket = Math.max(8, Math.min(60, cfg.baseTicket + d));
         guardarCfg(); refrescar();
     }
     function toggleAuto() { cfg.auto = !cfg.auto; guardarCfg(); refrescar(); }
 
-    // ¿Entra en la etiqueta con este tamaño? (se mide en una copia invisible, sin zoom)
-    function entra(base) {
+    // ¿Entra en esa caja con este tamaño? (se mide en una copia invisible, sin zoom)
+    function cabe(base, caja) {
         const m = $('medidor');
-        m.innerHTML = '<div class="paper label"><div class="ed" style="--b:' + base + 'px;font-size:' + base + 'px">' + ed.innerHTML + '</div></div>';
-        const p = m.firstChild, e = p.firstChild;
-        const cs = getComputedStyle(p);
-        const altoUtil = p.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
-        return e.scrollHeight <= altoUtil + 0.5 && e.scrollWidth <= e.clientWidth + 0.5;
+        m.innerHTML = '<div style="width:' + caja.w + 'px;height:' + caja.h + 'px;display:flex;align-items:center;overflow:hidden"><div class="ed" style="--b:' + base + 'px;font-size:' + base + 'px">' + ed.innerHTML + '</div></div>';
+        const e = m.firstChild.firstChild;
+        return e.scrollHeight <= caja.h + 0.5 && e.scrollWidth <= e.clientWidth + 0.5;
     }
-    function autoLlenar() {
-        let lo = 6, hi = 140;
-        if (!entra(lo)) return lo;
-        while (hi - lo > 0.5) { const mid = (lo + hi) / 2; if (entra(mid)) lo = mid; else hi = mid; }
+    const entra = base => cabe(base, cajaMain());
+    function ajustar(caja, max) {
+        let lo = 4, hi = max;
+        if (!cabe(lo, caja)) return lo;
+        while (hi - lo > 0.5) { const mid = (lo + hi) / 2; if (cabe(mid, caja)) lo = mid; else hi = mid; }
         return Math.floor(lo * 2) / 2;
     }
+    const autoLlenar = () => ajustar(cajaMain(), MAX_LABEL());
+    let _stubBase = 10;   // tamaño del texto repetido en el troquel (siempre automático)
 
     let _rafRef = 0;
     function refrescar() {
         cancelAnimationFrame(_rafRef);
         _rafRef = requestAnimationFrame(() => {
-            if (esLabel() && cfg.auto) cfg.baseLabel = autoLlenar();
+            if (esLabel() && cfg.auto) ponerBase(autoLlenar());
             const b = baseActual();
             ed.style.setProperty('--b', b + 'px');
             ed.style.fontSize = b + 'px';
-            $('baseVal').innerHTML = '<b>' + (Math.round(b * 2) / 2) + '</b>' + (esLabel() && cfg.auto ? 'auto' : 'tamaño');
-            $('baseVal').classList.toggle('auto', esLabel() && cfg.auto);
-            $('aviso').textContent = esLabel() && !cfg.auto && !entra(b) ? '⚠️ No entra en la etiqueta: achicá o tocá Auto' : '';
+            // Troquel: el mismo texto en chiquito
+            const st = $('stubEd');
+            if (esGrande() && cfg.troquel === 'rep' && textoPlano()) {
+                _stubBase = ajustar(cajaStub(), 60);
+                st.innerHTML = ed.innerHTML;
+                st.style.setProperty('--b', _stubBase + 'px'); st.style.fontSize = _stubBase + 'px';
+                st.style.textAlign = ed.style.textAlign || '';
+            } else st.innerHTML = '';
+            $('baseVal').innerHTML = '<b>' + Math.round(b) + '</b>tam.';
+            $('autoBtn').classList.toggle('on', esLabel() && cfg.auto);
+            $('autoBtn').innerHTML = cfg.auto ? 'AUTO<small>✓ prendido</small>' : 'AUTO<small>apagado</small>';
+            $('aviso').textContent = esLabel() && !cfg.auto && !entra(b) ? '⚠️ No entra en la etiqueta: achicá o tocá AUTO' : '';
         });
     }
 
@@ -378,9 +473,20 @@
     function armarHtml() {
         const b = baseActual();
         const cuerpo = ed.innerHTML;
+        const al = ed.style.textAlign ? 'text-align:' + ed.style.textAlign + ';' : '';
+        const edDe = (base, html) => '<div class="ed" style="--b:' + base + 'px;font-size:' + base + 'px;' + al + '">' + html + '</div>';
+        let hoja;
+        if (!esGrande()) hoja = '<div class="paper ' + claseHoja() + '">' + edDe(b, cuerpo) + '</div>';
+        else {
+            const rep = cfg.troquel === 'rep';
+            hoja = '<div class="paper ' + claseHoja() + '" style="--s:' + TROQUEL + 'px">' +
+                '<div class="stub"><div class="stubIn">' + (rep ? edDe(_stubBase, cuerpo) : '') + '</div></div>' +
+                '<div class="mainBox">' + edDe(b, cuerpo) + '</div></div>';
+            // La PC imprime la hoja parada (100 x 190 mm): la acostada se gira
+            if (cfg.orient === 'h') hoja = '<div style="position:relative;width:265px;height:' + G_LARGO + 'px;overflow:hidden"><div style="position:absolute;left:0;top:0;transform-origin:0 0;transform:' + GIRO + '">' + hoja + '</div></div>';
+        }
         return '<!DOCTYPE html><html><head><meta charset="utf-8"><style>html,body{margin:0;background:#fff}' + $('cssPapel').textContent +
-            '</style></head><body><div class="paper ' + (esLabel() ? 'label' : 'ticket') + '"><div class="ed" style="--b:' + b + 'px;font-size:' + b + 'px;' +
-            (ed.style.textAlign ? 'text-align:' + ed.style.textAlign + ';' : '') + '">' + cuerpo + '</div></div></body></html>';
+            '</style></head><body>' + hoja + '</body></html>';
     }
     const api = (path, opt) => fetch(API + path, Object.assign({ cache: 'no-store' }, opt || {}, { headers: { 'Content-Type': 'application/json', 'X-Key': KEY } })).then(r => r.json());
 
@@ -388,7 +494,7 @@
     async function imprimir(targetForzado) {
         if (!textoPlano()) { toast('Escribí algo primero', 'err'); ed.focus(); return; }
         if (esLabel() && !cfg.auto && !entra(baseActual()) && !confirm('No entra entero en la etiqueta (se va a cortar). ¿Imprimir igual?')) return;
-        const target = targetForzado || cfg.dest;
+        const target = targetForzado || targetActual();
         const btn = $('printBtn');
         btn.disabled = true; btn.textContent = '⏳ Mandando…';
         try {
@@ -425,9 +531,10 @@
     }
     function mostrarOffline(id, target) {
         $('offTitulo').textContent = '⚠️ ' + DEST[target].nom + ' no responde';
-        const otras = target === 'etiqueta' ? [] : [target === 'deposito' ? 'oficina' : 'deposito'];
-        $('offTxt').textContent = target === 'etiqueta'
-            ? 'La etiquetera DP no contesta (¿apagada o sin red?). Prendela y volvé a imprimir.'
+        const esEtq = target === 'etiqueta' || target === 'grande';
+        const otras = esEtq ? [] : [target === 'deposito' ? 'oficina' : 'deposito'];
+        $('offTxt').textContent = esEtq
+            ? 'La etiquetera ' + (target === 'grande' ? 'grande' : 'chica') + ' no contesta (¿apagada o sin red?). Prendela y volvé a imprimir.'
             : 'Esa impresora no contesta (¿apagada o sin papel?). ¿Lo mando a la otra?';
         $('offAcc').innerHTML = otras.map(o => '<button class="pri" onclick="retarget(\'' + id + '\',\'' + o + '\')">Mandar a ' + DEST[o].nom + '</button>').join('') +
             '<button onclick="cancelar(\'' + id + '\')">' + (otras.length ? 'Descartar' : 'Cerrar') + '</button>';
@@ -444,7 +551,7 @@
     function getUltimos() { try { return JSON.parse(localStorage.getItem('imp_ultimos') || '[]'); } catch (e) { return []; } }
     function guardarUltimo(titulo, target) {
         let l = getUltimos().filter(u => u.html !== ed.innerHTML);
-        l.unshift({ titulo, target, html: ed.innerHTML, base: baseActual(), auto: cfg.auto, at: Date.now() });
+        l.unshift({ titulo, target, html: ed.innerHTML, base: baseActual(), auto: cfg.auto, orient: cfg.orient, troquel: cfg.troquel, at: Date.now() });
         try { localStorage.setItem('imp_ultimos', JSON.stringify(l.slice(0, 25))); } catch (e) {}
     }
     function fecha(ts) {
@@ -466,8 +573,10 @@
     function usarUltimo(i) {
         const u = getUltimos()[i]; if (!u) return;
         ed.innerHTML = u.html;
-        if (DEST[u.target]) setDest(u.target);
-        if (u.target === 'etiqueta') { cfg.auto = u.auto !== false; if (!cfg.auto) cfg.baseLabel = u.base; }
+        if (u.target === 'grande') { if (u.orient) cfg.orient = u.orient; if (u.troquel) cfg.troquel = u.troquel; }
+        if (u.target === 'oficina' || u.target === 'deposito') { cfg.ticket = u.target; setDest('ticket'); }
+        else setDest(DEST[u.target] ? u.target : 'etiqueta');
+        if (esLabel()) { cfg.auto = u.auto !== false; if (!cfg.auto && u.base) ponerBase(u.base); }
         else cfg.baseTicket = u.base || cfg.baseTicket;
         guardarCfg(); guardarBorrador(); refrescar(); cerrarUltimos();
         toast('Listo para imprimir de nuevo (podés editarlo)', '');
