@@ -121,7 +121,21 @@
 
     .topfix .gopts { margin: 0; }
     .topfix .tools { position: static; display: flex; flex-wrap: nowrap; align-items: stretch; gap: 3px; padding: 0; background: none; }
-    .topfix .tools .tb { flex: 1 1 0; min-width: 0; height: 42px; padding: 0; }
+    .topfix .tools { gap: 6px; }
+    .topfix .tools .tb { flex: 1 1 0; min-width: 0; height: 46px; padding: 0; font-size: 1.1em; border-radius: 12px; }
+    #masBtn { font-size: 1.5em !important; letter-spacing: 1px; }
+    #masBtn.on { background: var(--primary); border-color: var(--primary); color: #fff; }
+    .masPanel { display: flex; flex-direction: column; gap: 7px; padding: 8px; border-radius: 12px; background: var(--bg); border: 1px solid var(--border); }
+    .masPanel[hidden] { display: none; }
+    .masRow { display: flex; gap: 6px; align-items: stretch; }
+    .masRow > * { flex: 1 1 0; min-width: 0; height: 44px; }
+    .masRow .autoBtn { min-width: 0; padding: 0 4px; }
+    .masRow .tb { padding: 0; font-size: 1.05em; }
+    .tamGrp { flex: 2 1 0 !important; display: flex; align-items: stretch; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-card); overflow: hidden; }
+    .tamGrp button { flex: 1; border: none; background: transparent; color: var(--text); font-size: 1.2em; font-weight: 900; cursor: pointer; }
+    .tamGrp .val { flex: 0 0 38px; display: flex; flex-direction: column; justify-content: center; text-align: center; font-size: 0.66em; font-weight: 800; color: var(--text-2); line-height: 1.1; }
+    .tamGrp .val b { display: block; font-size: 1.4em; color: var(--text); }
+    #redoBtn { font-size: 1.2em; }
     .topfix .tools .val { flex: 0 0 28px; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
     .topfix .tools .val { text-align: center; font-size: 0.66em; font-weight: 800; color: var(--text-2); line-height: 1.1; }
     .topfix .tools .val b { display: block; font-size: 1.4em; color: var(--text); }
@@ -185,31 +199,38 @@
         <h1>🖨️ Imprimir</h1>
         <div class="estado" id="estado">⏳ Viendo la PC…</div>
     </div>
-        <div class="gopts" id="grOpts" style="display:none">
-            <button class="gchip" id="orBtn" onclick="cambiarOrient()">↔ Acostada</button>
-            <div class="seg" id="segT">
-                <button data-t="rep" onclick="setTroquel('rep')">Repetir</button>
-                <button data-t="vac" onclick="setTroquel('vac')">Vacío</button>
-                <button data-t="todo" onclick="setTroquel('todo')">Todo</button>
-            </div>
-            <div class="stubTam" id="stubTam">
-                <button onclick="cambiarStub(-1)">−</button>
-                <span id="stubPct">✂️<small>100%</small></span>
-                <button onclick="cambiarStub(1)">+</button>
-            </div>
-        </div>
         <div class="tools" id="tools">
-            <button class="tb" id="undoBtn" onpointerdown="event.preventDefault()" onclick="deshacer()" title="Deshacer el último cambio">↶</button>
+            <button class="tb" id="undoBtn" onpointerdown="event.preventDefault()" onclick="deshacer()" title="Deshacer">↶</button>
+            <button class="tb" id="redoBtn" onpointerdown="event.preventDefault()" onclick="rehacer()" title="Rehacer" style="display:none">↷</button>
             <button class="tb" onpointerdown="event.preventDefault()" onclick="fmtBold()" title="Negrita"><b>B</b></button>
-            <button class="tb" onpointerdown="event.preventDefault()" onclick="fmtTam(-1)" title="Más chico">A−</button>
-            <button class="tb" onpointerdown="event.preventDefault()" onclick="fmtTam(1)" title="Más grande" style="font-size:1.1em">A+</button>
-            <button class="tb" id="alignBtn" onpointerdown="event.preventDefault()" onclick="fmtAlignCiclo()" title="Alinear la línea (centro → izquierda → derecha)">↔</button>
-            <button class="tb inv" onpointerdown="event.preventDefault()" onclick="fmtInv()" title="Letras blancas sobre fondo negro (la línea o la parte marcada)">A</button>
-            <span class="tsep"></span>
-            <button class="tb" onpointerdown="event.preventDefault()" onclick="cambiarBase(-1)">−</button>
-            <div class="val" id="baseVal"><b>16</b>tam.</div>
-            <button class="tb" onpointerdown="event.preventDefault()" onclick="cambiarBase(1)">+</button>
-            <button class="autoBtn" id="autoBtn" onpointerdown="event.preventDefault()" onclick="toggleAuto()" title="La letra se agranda sola hasta llenar la etiqueta">AUTO</button>
+            <button class="tb" onpointerdown="event.preventDefault()" onclick="fmtTam(-1)" title="Más chico (la línea o lo marcado)">A−</button>
+            <button class="tb" onpointerdown="event.preventDefault()" onclick="fmtTam(1)" title="Más grande (la línea o lo marcado)" style="font-size:1.15em">A+</button>
+            <button class="tb" id="masBtn" onpointerdown="event.preventDefault()" onclick="toggleMas()" title="Más opciones">⋯</button>
+        </div>
+        <div class="masPanel" id="masPanel" hidden>
+            <div class="masRow">
+                <button class="autoBtn" id="autoBtn" onpointerdown="event.preventDefault()" onclick="toggleAuto()" title="La letra se agranda sola hasta llenar la etiqueta">AUTO</button>
+                <div class="tamGrp">
+                    <button onpointerdown="event.preventDefault()" onclick="cambiarBase(-1)">−</button>
+                    <div class="val" id="baseVal"><b>16</b>tam.</div>
+                    <button onpointerdown="event.preventDefault()" onclick="cambiarBase(1)">+</button>
+                </div>
+                <button class="tb inv" onpointerdown="event.preventDefault()" onclick="fmtInv()" title="Letras blancas sobre fondo negro (la línea o lo marcado)">A</button>
+                <button class="tb" id="alignBtn" onpointerdown="event.preventDefault()" onclick="fmtAlignCiclo()" title="Alinear la línea (centro → izquierda → derecha)">↔</button>
+            </div>
+            <div class="gopts" id="grOpts" style="display:none">
+                <button class="gchip" id="orBtn" onclick="cambiarOrient()" style="font-size:1.1em">▭</button>
+                <div class="seg" id="segT">
+                    <button data-t="rep" onclick="setTroquel('rep')">Repetir</button>
+                    <button data-t="vac" onclick="setTroquel('vac')">Vacío</button>
+                    <button data-t="todo" onclick="setTroquel('todo')">Todo</button>
+                </div>
+                <div class="stubTam" id="stubTam">
+                    <button onclick="cambiarStub(-1)">−</button>
+                    <span id="stubPct">✂️<small>100%</small></span>
+                    <button onclick="cambiarStub(1)">+</button>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -329,7 +350,7 @@
         $('paperBox').classList.toggle('label', esLabel());
         $('autoBtn').style.display = esLabel() ? '' : 'none';
         $('grOpts').style.display = esGrande() ? '' : 'none';
-        $('orBtn').textContent = cfg.orient === 'h' ? '↔' : '↕';
+        $('orBtn').textContent = cfg.orient === 'h' ? '▭' : '▯';   // acostada / parada
         $('orBtn').title = cfg.orient === 'h' ? 'Acostada (tocá para parada)' : 'Parada (tocá para acostada)';
         $('stubTam').style.display = cfg.troquel === 'rep' ? '' : 'none';
         document.querySelectorAll('#segT button').forEach(b => b.classList.toggle('on', b.dataset.t === cfg.troquel));
@@ -553,16 +574,33 @@
     // ───── Deshacer (↶): guarda cómo estaba antes de cada cambio ─────
     const _hist = [];
     let _ultTipeo = 0;
+    const _fut = [];   // lo deshecho, para rehacer (↷)
     function snap() {
+        _fut.length = 0;   // un cambio nuevo borra lo que se podía rehacer
         const st = { h: ed.innerHTML, al: ed.style.textAlign || '' };
         const u = _hist[_hist.length - 1];
         if (!u || u.h !== st.h || u.al !== st.al) { _hist.push(st); if (_hist.length > 60) _hist.shift(); }
         verUndo();
     }
-    function verUndo() { $('undoBtn').classList.toggle('vacio', !_hist.length); }
+    function verUndo() {
+        $('undoBtn').classList.toggle('vacio', !_hist.length);
+        $('redoBtn').style.display = _fut.length ? '' : 'none';
+    }
+    function rehacer() {
+        const st = _fut.pop(); if (!st) return;
+        _hist.push({ h: ed.innerHTML, al: ed.style.textAlign || '' });
+        ed.innerHTML = st.h; ed.style.textAlign = st.al;
+        _rango = null; refrescar(); guardarBorrador(); verUndo();
+    }
+    // ⋯ Más: tamaño general, AUTO, fondo negro, alinear y opciones de la grande
+    function toggleMas() {
+        const p = $('masPanel'); p.hidden = !p.hidden;
+        $('masBtn').classList.toggle('on', !p.hidden);
+    }
     function deshacer() {
         const st = _hist.pop();
         if (!st) { toast('No hay nada para deshacer', ''); return; }
+        _fut.push({ h: ed.innerHTML, al: ed.style.textAlign || '' });
         ed.innerHTML = st.h; ed.style.textAlign = st.al;
         _rango = null; refrescar(); guardarBorrador(); verUndo();
     }
