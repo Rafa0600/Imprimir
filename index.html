@@ -31,6 +31,9 @@
     .dest { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 10px; }
     .dest button { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; touch-action: manipulation; padding: 10px 4px 9px; border-radius: 12px; border: 2px solid var(--border); background: var(--bg-card); color: var(--text); font-weight: 800; font-size: 0.8em; line-height: 1.2; cursor: pointer; }
     .dest button span { display: block; font-size: 1.5em; margin-bottom: 2px; }
+    .dest button { display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 50px; padding: 5px 6px !important; text-align: left; }
+    .dest button span { margin: 0 !important; font-size: 1.35em !important; flex: none; }
+    .dest button i { font-style: normal; line-height: 1.15; }
     .dest button small { display: block; font-weight: 600; font-size: 0.82em; color: var(--text-2); }
     .dest button.on { border-color: var(--primary); background: rgba(79,172,254,0.15); }
     .dest button.on small { color: var(--primary); }
@@ -101,6 +104,17 @@
     .sheet .acciones button { flex: 1; height: 46px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text); font-weight: 800; cursor: pointer; }
     .sheet .acciones .pri { background: var(--primary); border-color: var(--primary); color: #fff; }
 
+    .bottom .gopts { margin: 0; }
+    .bottom .tools { position: static; display: flex; flex-wrap: nowrap; align-items: stretch; gap: 4px; padding: 0; background: none; }
+    .bottom .tools .tb { flex: 1 1 0; min-width: 0; height: 42px; padding: 0; }
+    .bottom .tools .val { flex: 0 0 32px; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
+    .bottom .tools .val { text-align: center; font-size: 0.66em; font-weight: 800; color: var(--text-2); line-height: 1.1; }
+    .bottom .tools .val b { display: block; font-size: 1.4em; color: var(--text); }
+    .bottom .tools .autoBtn { flex: 1.5 1 0; min-width: 0; height: 42px; padding: 0 2px; }
+    .tsep { flex: 0 0 2px; }
+    .ico { flex: none; width: 46px; height: 50px; border-radius: 14px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text); font-size: 1.25em; cursor: pointer; }
+    .bottom .copias span { min-width: 44px; }
+    .bottom .copias button { width: 32px; }
     #paper.ticket .ed { min-height: 110px; }   /* solo en pantalla: lugar para escribir */
     #paper.grande.h.conT .stub { border-right: 2px dashed #4facfe; }   /* solo en pantalla: dónde está el troquel */
     #paper.grande.v.conT .stub { border-bottom: 2px dashed #4facfe; }
@@ -113,6 +127,7 @@
     .paper.label { height: 207px; padding: 8px; display: flex; align-items: center; overflow: hidden; }
     .ed { width: 100%; font-family: Arial, Helvetica, sans-serif; font-weight: 400; line-height: 1.15; color: #000; outline: none; white-space: pre-wrap; text-align: center; }
     .paper.ticket .ed { overflow-wrap: anywhere; }
+    .paper.label .ed, .paper.grande .ed { overflow-wrap: normal; }   /* en etiquetas nunca se corta una palabra */
     .ed b, .ed strong { font-weight: 700; }
     .ed .inv { background: #000; color: #fff; }                 /* letras blancas sobre negro */
     .ed div.inv { padding: 0.06em 0.15em; }
@@ -143,35 +158,10 @@
 
 <div class="wrap">
     <div class="dest" id="dest">
-        <button data-d="etiqueta" onclick="setDest('etiqueta')"><span>🏷️</span>Etiqueta</button>
-        <button data-d="grande" onclick="setDest('grande')"><span>📦</span>Etiqueta grande</button>
-        <button data-d="ticket" id="btnTicket" onclick="tocarTicket()" oncontextmenu="event.preventDefault()"><span>🎫</span>Ticket<small id="ticketQue">Oficina</small></button>
+        <button data-d="etiqueta" onclick="setDest('etiqueta')"><span>🏷️</span><i>Etiqueta</i></button>
+        <button data-d="grande" onclick="setDest('grande')"><span>📦</span><i>Etiqueta grande</i></button>
+        <button data-d="ticket" id="btnTicket" onclick="tocarTicket()" oncontextmenu="event.preventDefault()"><span>🎫</span><i>Ticket<small id="ticketQue">Oficina</small></i></button>
     </div>
-    <div class="gopts" id="grOpts" style="display:none">
-        <button class="gchip" id="orBtn" onclick="cambiarOrient()">↔ Acostada</button>
-        <div class="seg" id="segT">
-            <button data-t="rep" onclick="setTroquel('rep')">✂️ Repetir</button>
-            <button data-t="vac" onclick="setTroquel('vac')">Vacío</button>
-            <button data-t="todo" onclick="setTroquel('todo')">Usar todo</button>
-        </div>
-    </div>
-
-    <div class="tools" id="tools">
-        <div class="grp">
-            <button class="tb" onpointerdown="event.preventDefault()" onclick="fmtBold()" title="Negrita"><b>B</b></button>
-            <button class="tb" onpointerdown="event.preventDefault()" onclick="fmtTam(-1)" title="Más chico">A−</button>
-            <button class="tb" onpointerdown="event.preventDefault()" onclick="fmtTam(1)" title="Más grande" style="font-size:1.1em">A+</button>
-        </div>
-        <button class="tb" id="alignBtn" onpointerdown="event.preventDefault()" onclick="fmtAlignCiclo()" title="Alinear la línea (centro → izquierda → derecha)">↔</button>
-        <button class="tb inv" onpointerdown="event.preventDefault()" onclick="fmtInv()" title="Letras blancas sobre fondo negro (la línea o la parte marcada)">A</button>
-        <div class="tam">
-            <button class="tb" onpointerdown="event.preventDefault()" onclick="cambiarBase(-1)">−</button>
-            <div class="val" id="baseVal"><b>16</b>tam.</div>
-            <button class="tb" onpointerdown="event.preventDefault()" onclick="cambiarBase(1)">+</button>
-            <button class="autoBtn" id="autoBtn" onpointerdown="event.preventDefault()" onclick="toggleAuto()" title="La letra se agranda sola hasta llenar la etiqueta">AUTO</button>
-        </div>
-    </div>
-    <p class="hint" id="hint"></p>
 
     <div class="paper-wrap">
         <div class="paper-box" id="paperBox">
@@ -185,9 +175,30 @@
 </div>
 
 <div id="medidor"></div>
+<p id="hint" hidden></p>
 
-<div class="bottom">
+<div class="bottom" id="bottom">
     <div class="in">
+        <div class="gopts" id="grOpts" style="display:none">
+            <button class="gchip" id="orBtn" onclick="cambiarOrient()">↔ Acostada</button>
+            <div class="seg" id="segT">
+                <button data-t="rep" onclick="setTroquel('rep')">✂️ Repetir</button>
+                <button data-t="vac" onclick="setTroquel('vac')">Vacío</button>
+                <button data-t="todo" onclick="setTroquel('todo')">Usar todo</button>
+            </div>
+        </div>
+        <div class="tools" id="tools">
+            <button class="tb" onpointerdown="event.preventDefault()" onclick="fmtBold()" title="Negrita"><b>B</b></button>
+            <button class="tb" onpointerdown="event.preventDefault()" onclick="fmtTam(-1)" title="Más chico">A−</button>
+            <button class="tb" onpointerdown="event.preventDefault()" onclick="fmtTam(1)" title="Más grande" style="font-size:1.1em">A+</button>
+            <button class="tb" id="alignBtn" onpointerdown="event.preventDefault()" onclick="fmtAlignCiclo()" title="Alinear la línea (centro → izquierda → derecha)">↔</button>
+            <button class="tb inv" onpointerdown="event.preventDefault()" onclick="fmtInv()" title="Letras blancas sobre fondo negro (la línea o la parte marcada)">A</button>
+            <span class="tsep"></span>
+            <button class="tb" onpointerdown="event.preventDefault()" onclick="cambiarBase(-1)">−</button>
+            <div class="val" id="baseVal"><b>16</b>tam.</div>
+            <button class="tb" onpointerdown="event.preventDefault()" onclick="cambiarBase(1)">+</button>
+            <button class="autoBtn" id="autoBtn" onpointerdown="event.preventDefault()" onclick="toggleAuto()" title="La letra se agranda sola hasta llenar la etiqueta">AUTO</button>
+        </div>
         <div class="row">
             <div class="copias">
                 <button onclick="cambiarCopias(-1)">−</button>
@@ -195,10 +206,8 @@
                 <button onclick="cambiarCopias(1)">+</button>
             </div>
             <button class="print" id="printBtn" onclick="imprimir()">🖨️ Imprimir</button>
-        </div>
-        <div class="row">
-            <button class="sec" onclick="abrirUltimos()">🕘 Últimos</button>
-            <button class="sec" onclick="borrarTodo()">🗑️ Borrar</button>
+            <button class="ico" onclick="abrirUltimos()" title="Últimos impresos">🕘</button>
+            <button class="ico" onclick="borrarTodo()" title="Borrar todo">🗑️</button>
         </div>
     </div>
 </div>
@@ -326,7 +335,11 @@
         const m = $('medidor');
         m.innerHTML = '<div style="width:' + caja.w + 'px;height:' + caja.h + 'px;display:flex;align-items:center;overflow:hidden"><div class="ed" style="--b:' + base + 'px;font-size:' + base + 'px">' + ed.innerHTML + '</div></div>';
         const e = m.firstChild.firstChild;
-        return e.scrollHeight <= caja.h + 0.5 && e.scrollWidth <= e.clientWidth + 0.5;
+        return e.scrollHeight <= caja.h + 0.5 && e.scrollWidth <= e.clientWidth + 0.5 &&
+            [...e.children].every(c => {   // cada línea entra en su ancho (el fondo negro tiene margen propio)
+                const cs = getComputedStyle(c), rg = document.createRange(); rg.selectNodeContents(c);
+                return rg.getBoundingClientRect().width <= c.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight) + 0.5;
+            });
     }
     const entra = base => cabe(base, cajaMain());
     function ajustar(caja, max) {
@@ -634,6 +647,16 @@
     // ───── Inicio ─────
     try { const b = localStorage.getItem('imp_borrador'); if (b) ed.innerHTML = b; } catch (e) {}
     setDest(cfg.dest);
+    (() => {
+        const b = $('bottom');
+        const fit = () => {
+            const h = b.offsetHeight;
+            document.body.style.paddingBottom = (h + 14) + 'px';
+            $('toast').style.bottom = (h + 12) + 'px';
+        };
+        try { new ResizeObserver(fit).observe(b); } catch (e) {}
+        fit();
+    })();
     verEstado();
 </script>
 </body>
