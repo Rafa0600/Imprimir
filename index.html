@@ -8,6 +8,8 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Imprimir">
 <title>Mikra Imprimir</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🖨️</text></svg>">
 <style>
     :root {
@@ -835,6 +837,11 @@
         fit();
     })();
     verEstado();
+
+    // App instalable (service worker). Sin preguntas periódicas: la página se baja fresca cada vez que se abre.
+    if ('serviceWorker' in navigator && location.protocol === 'https:') {
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
+    }
 </script>
 </body>
 </html>
